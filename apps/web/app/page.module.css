@@ -1,186 +1,418 @@
 .page {
-  --gray-rgb: 0, 0, 0;
-  --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
-  --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-
-  display: grid;
-  grid-template-rows: 20px 1fr 20px;
-  align-items: center;
-  justify-items: center;
-  min-height: 100svh;
-  padding: 80px;
-  gap: 64px;
-  font-synthesis: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .page {
-    --gray-rgb: 255, 255, 255;
-    --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
-    --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-  }
-}
-
-.main {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  grid-row-start: 2;
+  gap: 48px;
+  padding: 64px min(8vw, 96px) 96px;
+  min-height: 100svh;
+  color: var(--foreground);
 }
 
-.main ol {
-  font-family: var(--font-geist-mono);
-  padding-left: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 24px;
-  letter-spacing: -0.01em;
-  list-style-position: inside;
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
 }
 
-.main li:not(:last-of-type) {
-  margin-bottom: 8px;
-}
-
-.main code {
-  font-family: inherit;
-  background: var(--gray-alpha-100);
-  padding: 2px 4px;
-  border-radius: 4px;
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 12px;
   font-weight: 600;
+  color: var(--muted);
 }
 
-.ctas {
+.header h1 {
+  font-size: clamp(32px, 4vw, 52px);
+  margin: 12px 0 16px;
+}
+
+.subhead {
+  max-width: 620px;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.headerActions {
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
-.ctas a {
-  appearance: none;
-  border-radius: 128px;
-  height: 48px;
-  padding: 0 20px;
-  font-family: var(--font-geist-sans);
+.primaryButton,
+.secondaryButton,
+.ghostButton {
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-weight: 600;
   border: 1px solid transparent;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 500;
-}
-
-a.primary {
-  background: var(--foreground);
-  color: var(--background);
-  gap: 8px;
-}
-
-a.secondary {
-  border-color: var(--gray-alpha-200);
-  min-width: 180px;
-}
-
-button.secondary {
-  appearance: none;
-  border-radius: 128px;
-  height: 48px;
-  padding: 0 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   font-family: var(--font-geist-sans);
-  border: 1px solid transparent;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 500;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #2b6eff, #6f5bff);
+  color: #fff;
+  box-shadow: 0 16px 28px rgba(43, 110, 255, 0.35);
+}
+
+.secondaryButton {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.ghostButton {
   background: transparent;
-  border-color: var(--gray-alpha-200);
-  min-width: 180px;
+  color: var(--foreground);
+  border-color: var(--border);
 }
 
-.footer {
-  font-family: var(--font-geist-sans);
-  grid-row-start: 3;
-  display: flex;
+.heroGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
 }
 
-.footer a {
+.heroCard,
+.heroCardMuted {
+  border-radius: 24px;
+  padding: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+.heroCardMuted {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.02));
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 24px;
+}
+
+.badge,
+.badgeSecondary {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge {
+  background: rgba(96, 255, 156, 0.2);
+  color: #1c7f4a;
+}
+
+.badgeSecondary {
+  background: rgba(43, 110, 255, 0.08);
+  color: var(--foreground);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 20px;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.activityList {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.activityItem {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+}
+
+.activityDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #bfc7d9;
+}
+
+.activityDot[data-tone="accent"] {
+  background: #2b6eff;
+}
+
+.activityDot[data-tone="highlight"] {
+  background: #6f5bff;
+}
+
+.stepsList {
+  display: grid;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.stepsList li {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.stepsList span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(43, 110, 255, 0.12);
+  color: #2b6eff;
+  font-weight: 700;
+}
+
+.dashboard {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.panel {
+  border-radius: 24px;
+  padding: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.panelHeader p {
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.panelBadge {
+  background: rgba(43, 110, 255, 0.12);
+  color: var(--foreground);
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.moodGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.moodCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.moodCard[data-active="true"] {
+  box-shadow: 0 12px 24px rgba(43, 110, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.moodEmoji {
+  font-size: 22px;
+}
+
+.moodLabel {
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.moodValue {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.moodPercent {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.dominantMood {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.dominantMood span {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.ideaForm textarea {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  font-family: var(--font-geist-sans);
+  background: var(--surface);
+  color: var(--foreground);
+  resize: vertical;
+}
+
+.ideaActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.checkbox {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
-.footer img {
-  flex-shrink: 0;
+.ideaMeta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
 }
 
-/* Enable hover only on non-touch devices */
+.ideaList {
+  display: grid;
+  gap: 16px;
+}
+
+.ideaCard {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.ideaFooter {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+.ideaUpvote {
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.footerGrid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.footerCard,
+.footerCardAccent {
+  border-radius: 22px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.footerCardAccent {
+  background: linear-gradient(140deg, rgba(43, 110, 255, 0.2), rgba(111, 91, 255, 0.25));
+}
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.codeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  margin: 16px 0 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.codeHint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 @media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
-
-  .footer a:hover {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  .primaryButton:hover,
+  .secondaryButton:hover,
+  .ghostButton:hover,
+  .moodCard:hover {
+    transform: translateY(-2px);
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .page {
-    padding: 32px;
-    padding-bottom: 80px;
+    padding: 48px 20px 80px;
   }
 
-  .main {
-    align-items: center;
+  .headerActions {
+    width: 100%;
   }
 
-  .main ol {
-    text-align: center;
-  }
-
-  .ctas {
-    flex-direction: column;
-  }
-
-  .ctas a {
-    font-size: 14px;
-    height: 40px;
-    padding: 0 16px;
-  }
-
-  a.secondary {
-    min-width: auto;
-  }
-
-  .footer {
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+  .primaryButton,
+  .secondaryButton,
+  .ghostButton {
+    width: 100%;
   }
 }

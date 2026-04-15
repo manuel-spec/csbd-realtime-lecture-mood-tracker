@@ -1,12 +1,29 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #f7f8fc;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --card: #ffffff;
+  --surface: #f8fafc;
+  --border: rgba(148, 163, 184, 0.25);
+  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --mood-confused: #f97316;
+  --mood-bored: #facc15;
+  --mood-neutral: #94a3b8;
+  --mood-engaged: #22c55e;
+  --mood-excited: #6366f1;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --muted: #94a3b8;
+    --card: #111827;
+    --surface: #0b1324;
+    --border: rgba(148, 163, 184, 0.2);
+    --shadow-soft: 0 18px 40px rgba(2, 6, 23, 0.5);
   }
 }
 
@@ -18,7 +35,9 @@ body {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: radial-gradient(circle at top, rgba(111, 91, 255, 0.18), transparent 55%),
+    var(--background);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -32,19 +51,8 @@ a {
   text-decoration: none;
 }
 
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-
-  .imgLight {
-    display: none;
-  }
-  .imgDark {
-    display: unset;
-  }
+button,
+textarea,
+input {
+  font-family: inherit;
 }
