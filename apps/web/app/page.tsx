@@ -11,11 +11,31 @@ const moodOptions: Array<{
   emoji: string;
   tone: string;
 }> = [
-  { value: "confused", label: "Confused", emoji: "🧩", tone: "var(--mood-confused)" },
+  {
+    value: "confused",
+    label: "Confused",
+    emoji: "🧩",
+    tone: "var(--mood-confused)",
+  },
   { value: "bored", label: "Bored", emoji: "🥱", tone: "var(--mood-bored)" },
-  { value: "neutral", label: "Neutral", emoji: "🙂", tone: "var(--mood-neutral)" },
-  { value: "engaged", label: "Engaged", emoji: "🤝", tone: "var(--mood-engaged)" },
-  { value: "excited", label: "Excited", emoji: "🚀", tone: "var(--mood-excited)" },
+  {
+    value: "neutral",
+    label: "Neutral",
+    emoji: "🙂",
+    tone: "var(--mood-neutral)",
+  },
+  {
+    value: "engaged",
+    label: "Engaged",
+    emoji: "🤝",
+    tone: "var(--mood-engaged)",
+  },
+  {
+    value: "excited",
+    label: "Excited",
+    emoji: "🚀",
+    tone: "var(--mood-excited)",
+  },
 ];
 
 const initialDistribution: Record<MoodType, number> = {
@@ -65,17 +85,20 @@ export default function Home() {
 
   const totalVotes = useMemo(
     () => Object.values(distribution).reduce((sum, value) => sum + value, 0),
-    [distribution]
+    [distribution],
   );
 
   const dominantMood = useMemo(() => {
-    return moodOptions.reduce((leader, mood) => {
-      const currentValue = distribution[mood.value];
-      if (!leader || currentValue > distribution[leader.value]) {
-        return mood;
-      }
-      return leader;
-    }, null as (typeof moodOptions)[number] | null);
+    return moodOptions.reduce(
+      (leader, mood) => {
+        const currentValue = distribution[mood.value];
+        if (!leader || currentValue > distribution[leader.value]) {
+          return mood;
+        }
+        return leader;
+      },
+      null as (typeof moodOptions)[number] | null,
+    );
   }, [distribution]);
 
   const handleVote = (mood: MoodType) => {
@@ -115,8 +138,9 @@ export default function Home() {
           <p className={styles.eyebrow}>Lecture Mood Tracker</p>
           <h1>Feel the room in real-time.</h1>
           <p className={styles.subhead}>
-            Start a lecture, invite students, and watch engagement update instantly. Collect
-            mood signals and ideas without interrupting your flow.
+            Start a lecture, invite students, and watch engagement update
+            instantly. Collect mood signals and ideas without interrupting your
+            flow.
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -171,7 +195,9 @@ export default function Home() {
               <span>2</span>
               <div>
                 <h3>Collect mood signals</h3>
-                <p>Students vote on engagement without interrupting the flow.</p>
+                <p>
+                  Students vote on engagement without interrupting the flow.
+                </p>
               </div>
             </li>
             <li>
@@ -214,7 +240,9 @@ export default function Home() {
                     <p className={styles.moodLabel}>{mood.label}</p>
                   </div>
                   <div>
-                    <p className={styles.moodValue}>{distribution[mood.value]}</p>
+                    <p className={styles.moodValue}>
+                      {distribution[mood.value]}
+                    </p>
                     <p className={styles.moodPercent}>{percentage}%</p>
                   </div>
                 </button>
@@ -224,7 +252,9 @@ export default function Home() {
           <div className={styles.dominantMood}>
             <p>Dominant mood</p>
             <span>
-              {dominantMood ? `${dominantMood.emoji} ${dominantMood.label}` : "No votes yet"}
+              {dominantMood
+                ? `${dominantMood.emoji} ${dominantMood.label}`
+                : "No votes yet"}
             </span>
           </div>
         </div>
@@ -282,7 +312,8 @@ export default function Home() {
         <div className={styles.footerCard}>
           <h3>Instructor controls</h3>
           <p>
-            Pause voting, reset the mood, or export session insights in one place.
+            Pause voting, reset the mood, or export session insights in one
+            place.
           </p>
           <div className={styles.buttonRow}>
             <button className={styles.secondaryButton}>Pause voting</button>

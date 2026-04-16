@@ -35,9 +35,14 @@ body {
 
 body {
   color: var(--foreground);
-  background: radial-gradient(circle at top, rgba(111, 91, 255, 0.18), transparent 55%),
+  background:
+    radial-gradient(circle at top, rgba(111, 91, 255, 0.18), transparent 55%),
     var(--background);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 * {
