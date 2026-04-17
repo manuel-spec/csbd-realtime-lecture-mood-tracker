@@ -41,6 +41,62 @@
   align-items: center;
 }
 
+.landingGrid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.landingCard,
+.landingCardMuted {
+  border-radius: 24px;
+  padding: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 16px;
+}
+
+.landingCardMuted {
+  background: linear-gradient(
+    180deg,
+    rgba(43, 110, 255, 0.08),
+    rgba(111, 91, 255, 0.08)
+  );
+}
+
+.joinForm {
+  display: grid;
+  gap: 12px;
+}
+
+.joinForm input {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.statusMessage {
+  color: #ef4444;
+  font-size: 14px;
+}
+
+.sessionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
 .connectionPill {
   display: inline-flex;
   align-items: center;

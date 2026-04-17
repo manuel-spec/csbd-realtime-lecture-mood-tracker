@@ -90,7 +90,6 @@ const initialIdeas = [
   },
 ];
 
-const lectureId = "csbd-241";
 const realtimeBaseUrl = "http://localhost:3001";
 const realtimeWsUrl = "ws://localhost:3001";
 
@@ -104,6 +103,9 @@ const formatTimeAgo = (timestamp: string | null) => {
 };
 
 export default function Home() {
+  const [activeLectureId, setActiveLectureId] = useState<string | null>(null);
+  const [joinCode, setJoinCode] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [distribution, setDistribution] = useState(initialDistribution);
   const [selectedMood, setSelectedMood] = useState<MoodType | null>("engaged");
   const [ideas, setIdeas] = useState(initialIdeas);
@@ -169,13 +171,47 @@ export default function Home() {
     setLastMoodUpdate(state.lastUpdated ?? null);
   };
 
+  const generateLectureCode = () => {
+    const letters = Array.from({ length: 3 }, () =>
+      String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+    ).join("");
+    const numbers = Math.floor(100 + Math.random() * 900);
+    return `${letters}-${numbers}`;
+  };
+
+  const handleCreateLecture = () => {
+    const newCode = generateLectureCode();
+    setActiveLectureId(newCode.toLowerCase());
+    setStatusMessage("");
+  };
+
+  const handleJoinLecture = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!joinCode.trim()) {
+      setStatusMessage("Enter a lecture code to join.");
+      return;
+    }
+    setActiveLectureId(joinCode.trim().toLowerCase());
+    setStatusMessage("");
+  };
+
+  const handleLeaveLecture = () => {
+    setActiveLectureId(null);
+    setConnectionStatus("connecting");
+    setDistribution(initialDistribution);
+    setIdeas(initialIdeas);
+    setParticipants(0);
+    setLastMoodUpdate(null);
+  };
+
   useEffect(() => {
+    if (!activeLectureId) return;
     let isMounted = true;
 
     const fetchState = async () => {
       try {
         const response = await fetch(
-          `${realtimeBaseUrl}/state?lectureId=${lectureId}`,
+          `${realtimeBaseUrl}/state?lectureId=${activeLectureId}`,
         );
         if (!response.ok) return;
         const data = (await response.json()) as LectureState;
@@ -190,7 +226,7 @@ export default function Home() {
     fetchState();
 
     const socket = new WebSocket(
-      `${realtimeWsUrl}?lectureId=${lectureId}&userId=${userId}`,
+      `${realtimeWsUrl}?lectureId=${activeLectureId}&userId=${userId}`,
     );
     wsRef.current = socket;
 
@@ -230,7 +266,7 @@ export default function Home() {
       isMounted = false;
       socket.close();
     };
-  }, [userId]);
+  }, [activeLectureId, userId]);
 
   const sendRealtimeMessage = async (payload: OutgoingMessage) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -243,7 +279,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lectureId,
+          lectureId: activeLectureId,
           userId,
           mood: payload.payload.mood,
         }),
@@ -255,7 +291,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lectureId,
+          lectureId: activeLectureId,
           content: payload.payload.content,
           author: payload.payload.author,
         }),
@@ -267,7 +303,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lectureId,
+          lectureId: activeLectureId,
           ideaId: payload.payload.ideaId,
         }),
       });
@@ -284,7 +320,9 @@ export default function Home() {
       return next;
     });
     setSelectedMood(mood);
-    sendRealtimeMessage({ type: "mood_vote", payload: { mood } });
+    if (activeLectureId) {
+      sendRealtimeMessage({ type: "mood_vote", payload: { mood } });
+    }
   };
 
   const handleIdeaSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -295,96 +333,208 @@ export default function Home() {
       content: ideaText.trim(),
       author: isAnonymous ? "Anonymous" : "You",
     };
-    sendRealtimeMessage({ type: "idea_submit", payload });
+    if (activeLectureId) {
+      sendRealtimeMessage({ type: "idea_submit", payload });
+    }
     setIdeaText("");
     setIsAnonymous(false);
   };
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Lecture Mood Tracker</p>
-          <h1>Feel the room in real-time.</h1>
-          <p className={styles.subhead}>
-            Start a lecture, invite students, and watch engagement update
-            instantly. Collect mood signals and ideas without interrupting your
-            flow.
-          </p>
-        </div>
-        <div className={styles.headerActions}>
-          <div className={styles.connectionPill} data-status={connectionStatus}>
-            <span className={styles.connectionDot} />
-            {connectionStatus === "live" ? "Live sync" : "Offline"}
-          </div>
-          <button className={styles.primaryButton}>Create lecture</button>
-          <button className={styles.ghostButton}>Join with code</button>
-        </div>
-      </header>
-
-      <section className={styles.heroGrid}>
-        <div className={styles.heroCard}>
-          <h2>Live lecture overview</h2>
-          <div className={styles.badgeRow}>
-            <span className={styles.badge}>Active</span>
-            <span className={styles.badgeSecondary}>Advanced Web Systems</span>
-            <span className={styles.badgeSecondary}>Room 3B</span>
-          </div>
-          <div className={styles.statsGrid}>
+      {!activeLectureId ? (
+        <>
+          <header className={styles.header}>
             <div>
-              <p className={styles.statLabel}>Participants</p>
-              <p className={styles.statValue}>48</p>
+              <p className={styles.eyebrow}>Lecture Mood Tracker</p>
+              <h1>Launch a lecture in seconds.</h1>
+              <p className={styles.subhead}>
+                Create a room, share the code, and watch student sentiment update
+                live. No sign-in required.
+              </p>
             </div>
-            <div>
-              <p className={styles.statLabel}>Ideas shared</p>
-              <p className={styles.statValue}>19</p>
+            <div className={styles.headerActions}>
+              <button
+                className={styles.primaryButton}
+                onClick={handleCreateLecture}
+              >
+                Create lecture
+              </button>
             </div>
-            <div>
-              <p className={styles.statLabel}>Mood trend</p>
-              <p className={styles.statValue}>Rising</p>
-            </div>
-          </div>
-          <div className={styles.activityList}>
-            {activityFeed.map((item) => (
-              <div key={item.id} className={styles.activityItem}>
-                <span className={styles.activityDot} data-tone={item.tone} />
-                <p>{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+          </header>
 
-        <div className={styles.heroCardMuted}>
-          <h2>How it works</h2>
-          <ol className={styles.stepsList}>
-            <li>
-              <span>1</span>
-              <div>
-                <h3>Create the lecture</h3>
-                <p>Generate a session code and share it with your class.</p>
-              </div>
-            </li>
-            <li>
-              <span>2</span>
-              <div>
-                <h3>Collect mood signals</h3>
-                <p>
-                  Students vote on engagement without interrupting the flow.
-                </p>
-              </div>
-            </li>
-            <li>
-              <span>3</span>
-              <div>
-                <h3>Surface ideas</h3>
-                <p>Anonymous ideas and feedback land in one organized feed.</p>
-              </div>
-            </li>
-          </ol>
-        </div>
-      </section>
+          <section className={styles.landingGrid}>
+            <div className={styles.landingCard}>
+              <h2>Start a new lecture</h2>
+              <p>
+                Instantly generate a room code and start tracking engagement.
+              </p>
+              <button
+                className={styles.primaryButton}
+                onClick={handleCreateLecture}
+              >
+                Create & share code
+              </button>
+            </div>
+            <div className={styles.landingCardMuted}>
+              <h2>Join an existing lecture</h2>
+              <p>Enter the lecture code your instructor shared.</p>
+              <form className={styles.joinForm} onSubmit={handleJoinLecture}>
+                <input
+                  type="text"
+                  placeholder="e.g. CSB-241"
+                  value={joinCode}
+                  onChange={(event) => setJoinCode(event.target.value)}
+                />
+                <button className={styles.secondaryButton} type="submit">
+                  Join lecture
+                </button>
+              </form>
+              {statusMessage ? (
+                <p className={styles.statusMessage}>{statusMessage}</p>
+              ) : null}
+            </div>
+          </section>
 
-      <section className={styles.dashboard}>
+          <section className={styles.heroGrid}>
+            <div className={styles.heroCard}>
+              <h2>Live lecture overview</h2>
+              <div className={styles.badgeRow}>
+                <span className={styles.badge}>Instant</span>
+                <span className={styles.badgeSecondary}>No installs</span>
+                <span className={styles.badgeSecondary}>Works on mobile</span>
+              </div>
+              <div className={styles.statsGrid}>
+                <div>
+                  <p className={styles.statLabel}>Latency</p>
+                  <p className={styles.statValue}>1s</p>
+                </div>
+                <div>
+                  <p className={styles.statLabel}>Ideas shared</p>
+                  <p className={styles.statValue}>19</p>
+                </div>
+                <div>
+                  <p className={styles.statLabel}>Engagement</p>
+                  <p className={styles.statValue}>High</p>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.heroCardMuted}>
+              <h2>How it works</h2>
+              <ol className={styles.stepsList}>
+                <li>
+                  <span>1</span>
+                  <div>
+                    <h3>Create the lecture</h3>
+                    <p>Generate a session code and share it with your class.</p>
+                  </div>
+                </li>
+                <li>
+                  <span>2</span>
+                  <div>
+                    <h3>Collect mood signals</h3>
+                    <p>
+                      Students vote on engagement without interrupting the
+                      flow.
+                    </p>
+                  </div>
+                </li>
+                <li>
+                  <span>3</span>
+                  <div>
+                    <h3>Surface ideas</h3>
+                    <p>
+                      Anonymous ideas and feedback land in one organized feed.
+                    </p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </section>
+        </>
+      ) : (
+        <>
+          <header className={styles.sessionHeader}>
+            <div>
+              <p className={styles.eyebrow}>Lecture room</p>
+              <h1>Code {activeLectureId.toUpperCase()}</h1>
+              <p className={styles.subhead}>
+                Share this code so students can join and vote in real time.
+              </p>
+            </div>
+            <div className={styles.headerActions}>
+              <div
+                className={styles.connectionPill}
+                data-status={connectionStatus}
+              >
+                <span className={styles.connectionDot} />
+                {connectionStatus === "live" ? "Live sync" : "Offline"}
+              </div>
+              <button className={styles.ghostButton} onClick={handleLeaveLecture}>
+                Leave lecture
+              </button>
+            </div>
+          </header>
+
+          <section className={styles.heroGrid}>
+            <div className={styles.heroCard}>
+              <h2>Live lecture overview</h2>
+              <div className={styles.badgeRow}>
+                <span className={styles.badge}>Active</span>
+                <span className={styles.badgeSecondary}>Live room</span>
+                <span className={styles.badgeSecondary}>Realtime updates</span>
+              </div>
+              <div className={styles.statsGrid}>
+                <div>
+                  <p className={styles.statLabel}>Participants</p>
+                  <p className={styles.statValue}>{participants}</p>
+                </div>
+                <div>
+                  <p className={styles.statLabel}>Ideas shared</p>
+                  <p className={styles.statValue}>{ideas.length}</p>
+                </div>
+                <div>
+                  <p className={styles.statLabel}>Mood trend</p>
+                  <p className={styles.statValue}>
+                    {dominantMood ? dominantMood.label : "Neutral"}
+                  </p>
+                </div>
+              </div>
+              <div className={styles.activityList}>
+                {activityFeed.map((item) => (
+                  <div key={item.id} className={styles.activityItem}>
+                    <span
+                      className={styles.activityDot}
+                      data-tone={item.tone}
+                    />
+                    <p>{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.heroCardMuted}>
+              <h2>Now open to students</h2>
+              <p className={styles.subhead}>
+                Ask everyone to join with code {activeLectureId.toUpperCase()}.
+                They can vote and submit ideas from any device.
+              </p>
+              <div className={styles.codeRow}>
+                <span>{activeLectureId.toUpperCase()}</span>
+                <button
+                  className={styles.primaryButton}
+                  onClick={() =>
+                    navigator.clipboard.writeText(activeLectureId.toUpperCase())
+                  }
+                >
+                  Copy code
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.dashboard}>
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
@@ -491,27 +641,31 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={styles.footerGrid}>
-        <div className={styles.footerCard}>
-          <h3>Instructor controls</h3>
-          <p>
-            Pause voting, reset the mood, or export session insights in one
-            place.
-          </p>
-          <div className={styles.buttonRow}>
-            <button className={styles.secondaryButton}>Pause voting</button>
-            <button className={styles.ghostButton}>Export stats</button>
-          </div>
-        </div>
-        <div className={styles.footerCardAccent}>
-          <h3>Share lecture code</h3>
-          <div className={styles.codeRow}>
-            <span>CSBD-241</span>
-            <button className={styles.primaryButton}>Copy</button>
-          </div>
-          <p className={styles.codeHint}>Students join at mood.classroom.app</p>
-        </div>
-      </section>
+          <section className={styles.footerGrid}>
+            <div className={styles.footerCard}>
+              <h3>Instructor controls</h3>
+              <p>
+                Pause voting, reset the mood, or export session insights in one
+                place.
+              </p>
+              <div className={styles.buttonRow}>
+                <button className={styles.secondaryButton}>Pause voting</button>
+                <button className={styles.ghostButton}>Export stats</button>
+              </div>
+            </div>
+            <div className={styles.footerCardAccent}>
+              <h3>Share lecture code</h3>
+              <div className={styles.codeRow}>
+                <span>{activeLectureId.toUpperCase()}</span>
+                <button className={styles.primaryButton}>Copy</button>
+              </div>
+              <p className={styles.codeHint}>
+                Students join with the code above.
+              </p>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }
