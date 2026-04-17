@@ -1,9 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./page.module.css";
 
 type MoodType = "confused" | "bored" | "neutral" | "engaged" | "excited";
+
+type Idea = {
+  id: string;
+  content: string;
+  author: string;
+  upvotes: number;
+  createdAt: string;
+};
+
+type LectureState = {
+  distribution: Record<MoodType, number>;
+  ideas: Idea[];
+  participants: number;
+  lastUpdated: string;
+};
+
+type OutgoingMessage =
+  | { type: "mood_vote"; payload: { mood: MoodType } }
+  | { type: "idea_submit"; payload: { content: string; author: string } }
+  | { type: "idea_upvote"; payload: { ideaId: string } };
 
 const moodOptions: Array<{
   value: MoodType;
@@ -52,29 +72,36 @@ const initialIdeas = [
     content: "Could we get a quick recap of closure examples?",
     author: "Aisha",
     upvotes: 6,
-    time: "2m ago",
+    createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
   },
   {
     id: "idea-2",
     content: "A diagram of the data flow would help a lot.",
     author: "Anonymous",
     upvotes: 4,
-    time: "5m ago",
+    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
   },
   {
     id: "idea-3",
     content: "Can we slow down during the API demo?",
     author: "Luis",
     upvotes: 3,
-    time: "9m ago",
+    createdAt: new Date(Date.now() - 9 * 60 * 1000).toISOString(),
   },
 ];
 
-const activityFeed = [
-  { id: "activity-1", label: "42 students online", tone: "accent" },
-  { id: "activity-2", label: "Mood updated 12s ago", tone: "muted" },
-  { id: "activity-3", label: "3 new ideas this session", tone: "highlight" },
-];
+const lectureId = "csbd-241";
+const realtimeBaseUrl = "http://localhost:3001";
+const realtimeWsUrl = "ws://localhost:3001";
+
+const formatTimeAgo = (timestamp: string | null) => {
+  if (!timestamp) return "just now";
+  const diff = Date.now() - new Date(timestamp).getTime();
+  if (diff < 60 * 1000) return "just now";
+  if (diff < 60 * 60 * 1000) return `${Math.round(diff / 60000)}m ago`;
+  if (diff < 24 * 60 * 60 * 1000) return `${Math.round(diff / 3600000)}h ago`;
+  return `${Math.round(diff / 86400000)}d ago`;
+};
 
 export default function Home() {
   const [distribution, setDistribution] = useState(initialDistribution);
@@ -82,6 +109,20 @@ export default function Home() {
   const [ideas, setIdeas] = useState(initialIdeas);
   const [ideaText, setIdeaText] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [participants, setParticipants] = useState(42);
+  const [lastMoodUpdate, setLastMoodUpdate] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "live" | "offline"
+  >("connecting");
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const userId = useMemo(
+    () =>
+      typeof window !== "undefined"
+        ? window.crypto.randomUUID()
+        : "local-user",
+    [],
+  );
 
   const totalVotes = useMemo(
     () => Object.values(distribution).reduce((sum, value) => sum + value, 0),
@@ -101,6 +142,140 @@ export default function Home() {
     );
   }, [distribution]);
 
+  const activityFeed = useMemo(
+    () => [
+      {
+        id: "activity-1",
+        label: `${participants} students online`,
+        tone: "accent",
+      },
+      {
+        id: "activity-2",
+        label: `Mood updated ${formatTimeAgo(lastMoodUpdate)}`,
+        tone: "muted",
+      },
+      {
+        id: "activity-3",
+        label: `${ideas.length} ideas this session`,
+        tone: "highlight",
+      },
+    ],
+    [participants, lastMoodUpdate, ideas.length],
+  );
+
+  const applyLectureState = (state: LectureState) => {
+    if (!state) return;
+    setDistribution(state.distribution ?? initialDistribution);
+    setIdeas(state.ideas ?? []);
+    setParticipants(state.participants ?? 0);
+    setLastMoodUpdate(state.lastUpdated ?? null);
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchState = async () => {
+      try {
+        const response = await fetch(
+          `${realtimeBaseUrl}/state?lectureId=${lectureId}`,
+        );
+        if (!response.ok) return;
+        const data = (await response.json()) as LectureState;
+        if (isMounted) {
+          applyLectureState(data);
+        }
+      } catch (error) {
+        setConnectionStatus("offline");
+      }
+    };
+
+    fetchState();
+
+    const socket = new WebSocket(
+      `${realtimeWsUrl}?lectureId=${lectureId}&userId=${userId}`,
+    );
+    wsRef.current = socket;
+
+    socket.onopen = () => setConnectionStatus("live");
+    socket.onclose = () => setConnectionStatus("offline");
+    socket.onerror = () => setConnectionStatus("offline");
+
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === "state") {
+          applyLectureState(message.payload);
+        }
+        if (message.type === "mood_updated") {
+          setDistribution(message.payload.distribution);
+          setLastMoodUpdate(message.payload.lastUpdated);
+        }
+        if (message.type === "idea_created") {
+          setIdeas((prev) => [message.payload, ...prev]);
+        }
+        if (message.type === "idea_upvoted") {
+          setIdeas((prev) =>
+            prev.map((idea) =>
+              idea.id === message.payload.id ? message.payload : idea,
+            ),
+          );
+        }
+        if (message.type === "participant_count") {
+          setParticipants(message.payload.participants ?? 0);
+        }
+      } catch (error) {
+        return;
+      }
+    };
+
+    return () => {
+      isMounted = false;
+      socket.close();
+    };
+  }, [userId]);
+
+  const sendRealtimeMessage = async (payload: OutgoingMessage) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(payload));
+      return;
+    }
+
+    if (payload.type === "mood_vote") {
+      await fetch(`${realtimeBaseUrl}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lectureId,
+          userId,
+          mood: payload.payload.mood,
+        }),
+      });
+    }
+
+    if (payload.type === "idea_submit") {
+      await fetch(`${realtimeBaseUrl}/idea`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lectureId,
+          content: payload.payload.content,
+          author: payload.payload.author,
+        }),
+      });
+    }
+
+    if (payload.type === "idea_upvote") {
+      await fetch(`${realtimeBaseUrl}/idea/upvote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lectureId,
+          ideaId: payload.payload.ideaId,
+        }),
+      });
+    }
+  };
+
   const handleVote = (mood: MoodType) => {
     setDistribution((prev) => {
       const next = { ...prev };
@@ -111,22 +286,18 @@ export default function Home() {
       return next;
     });
     setSelectedMood(mood);
+    sendRealtimeMessage({ type: "mood_vote", payload: { mood } });
   };
 
   const handleIdeaSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!ideaText.trim()) return;
 
-    setIdeas((prev) => [
-      {
-        id: `idea-${prev.length + 1}`,
-        content: ideaText.trim(),
-        author: isAnonymous ? "Anonymous" : "You",
-        upvotes: 0,
-        time: "Just now",
-      },
-      ...prev,
-    ]);
+    const payload = {
+      content: ideaText.trim(),
+      author: isAnonymous ? "Anonymous" : "You",
+    };
+    sendRealtimeMessage({ type: "idea_submit", payload });
     setIdeaText("");
     setIsAnonymous(false);
   };
@@ -144,6 +315,10 @@ export default function Home() {
           </p>
         </div>
         <div className={styles.headerActions}>
+          <div className={styles.connectionPill} data-status={connectionStatus}>
+            <span className={styles.connectionDot} />
+            {connectionStatus === "live" ? "Live sync" : "Offline"}
+          </div>
           <button className={styles.primaryButton}>Create lecture</button>
           <button className={styles.ghostButton}>Join with code</button>
         </div>
@@ -298,10 +473,20 @@ export default function Home() {
                   <p>{idea.content}</p>
                   <div className={styles.ideaFooter}>
                     <span>{idea.author}</span>
-                    <span>• {idea.time}</span>
+                    <span>• {formatTimeAgo(idea.createdAt)}</span>
                   </div>
                 </div>
-                <button className={styles.ideaUpvote}>⬆ {idea.upvotes}</button>
+                <button
+                  className={styles.ideaUpvote}
+                  onClick={() =>
+                    sendRealtimeMessage({
+                      type: "idea_upvote",
+                      payload: { ideaId: idea.id },
+                    })
+                  }
+                >
+                  ⬆ {idea.upvotes}
+                </button>
               </div>
             ))}
           </div>

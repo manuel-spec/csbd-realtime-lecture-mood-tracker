@@ -17,6 +17,12 @@ Run the development server from the monorepo root:
 pnpm dev --filter=web
 ```
 
+Start the realtime API + WebSocket server in a second terminal:
+
+```bash
+pnpm --filter=web dev:realtime
+```
+
 Then open [http://localhost:3000](http://localhost:3000).
 
 ## Notes
