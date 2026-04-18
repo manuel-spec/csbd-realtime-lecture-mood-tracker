@@ -118,9 +118,7 @@ export default function Home() {
   const wsRef = useRef<WebSocket | null>(null);
   const userId = useMemo(
     () =>
-      typeof window !== "undefined"
-        ? window.crypto.randomUUID()
-        : "local-user",
+      typeof window !== "undefined" ? window.crypto.randomUUID() : "local-user",
     [],
   );
 
@@ -184,7 +182,7 @@ export default function Home() {
         if (isMounted) {
           applyLectureState(data);
         }
-      } catch (error) {
+      } catch {
         setConnectionStatus("offline");
       }
     };
@@ -223,7 +221,7 @@ export default function Home() {
         if (message.type === "participant_count") {
           setParticipants(message.payload.participants ?? 0);
         }
-      } catch (error) {
+      } catch {
         return;
       }
     };

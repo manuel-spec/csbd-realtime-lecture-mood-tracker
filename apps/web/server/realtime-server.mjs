@@ -2,7 +2,7 @@ import http from "node:http";
 import { randomUUID } from "node:crypto";
 import { WebSocketServer } from "ws";
 
-const PORT = Number(process.env.REALTIME_PORT ?? 3001);
+const PORT = 3001;
 
 const moodOrder = ["confused", "bored", "neutral", "engaged", "excited"];
 const defaultDistribution = {
@@ -232,7 +232,7 @@ wss.on("connection", (socket, request) => {
     let message;
     try {
       message = JSON.parse(data.toString());
-    } catch (error) {
+    } catch {
       return;
     }
 
