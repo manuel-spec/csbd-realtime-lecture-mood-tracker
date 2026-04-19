@@ -6,11 +6,11 @@ const PORT = 3001;
 
 const moodOrder = ["confused", "bored", "neutral", "engaged", "excited"];
 const defaultDistribution = {
-  confused: 4,
-  bored: 2,
-  neutral: 8,
-  engaged: 12,
-  excited: 6,
+  confused: 0,
+  bored: 0,
+  neutral: 0,
+  engaged: 0,
+  excited: 0,
 };
 
 const lectures = new Map();
@@ -22,29 +22,7 @@ const getLecture = (lectureId) => {
       lectureId,
       votes: new Map(),
       distribution: { ...defaultDistribution },
-      ideas: [
-        {
-          id: "idea-1",
-          content: "Could we get a quick recap of closure examples?",
-          author: "Aisha",
-          upvotes: 6,
-          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "idea-2",
-          content: "A diagram of the data flow would help a lot.",
-          author: "Anonymous",
-          upvotes: 4,
-          createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "idea-3",
-          content: "Can we slow down during the API demo?",
-          author: "Luis",
-          upvotes: 3,
-          createdAt: new Date(Date.now() - 9 * 60 * 1000).toISOString(),
-        },
-      ],
+      ideas: [],
       participants: new Set(),
       lastMoodUpdate: new Date().toISOString(),
     });
